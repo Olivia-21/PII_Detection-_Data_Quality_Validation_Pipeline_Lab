@@ -1,0 +1,54 @@
+PII DETECTION REPORT
+========================================
+Dataset: customers_raw.csv
+Total Rows: 10
+
+RISK ASSESSMENT:
+----------------------------------------
+- HIGH: Names, emails, phone numbers, addresses, dates of birth
+- MEDIUM: Income (financial sensitivity)
+- LOW: customer_id, account_status, created_date (not PII)
+
+DETECTED PII:
+----------------------------------------
+- First names found: 9 (90%)
+- Last names found: 9 (90%)
+- Emails found: 10 (100%)
+- Phone numbers found: 10 (100%)
+- Addresses found: 8 (80%)
+- Dates of birth found: 9 (90%)
+
+PII COLUMNS BREAKDOWN:
+----------------------------------------
+
+  HIGH RISK:
+  - first_name: Direct identifier - can identify a person
+  - last_name: Direct identifier - can identify a person
+  - email: Contact info - can be used for phishing
+  - phone: Contact info - can be used for social engineering
+  - date_of_birth: Sensitive personal data - used in identity verification
+  - address: Location data - reveals where a person lives
+
+  MEDIUM RISK:
+  - income: Financial data - sensitive but not directly identifying
+
+  LOW RISK:
+  - customer_id: Internal ID - not PII on its own
+  - account_status: Account metadata - not personally identifying
+  - created_date: System metadata - not personally identifying
+
+EXPOSURE RISK:
+----------------------------------------
+If this dataset were breached, attackers could:
+- Phish customers using their email addresses
+- Spoof identities using names + DOB + address combinations
+- Social engineer targets using phone numbers
+- Commit financial fraud using income data
+- Physically locate customers using address data
+
+MITIGATION:
+----------------------------------------
+- Mask all PII before sharing with analytics teams
+- Apply data minimization (only share what is needed)
+- Encrypt sensitive columns at rest
+- Implement access controls (role-based access)

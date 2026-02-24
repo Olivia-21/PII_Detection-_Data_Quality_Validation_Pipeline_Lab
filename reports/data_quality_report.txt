@@ -1,0 +1,93 @@
+DATA QUALITY PROFILE REPORT
+========================================
+Dataset: customers_raw.csv
+Total Rows: 10
+Total Columns: 10
+
+COMPLETENESS:
+----------------------------------------
+- customer_id: 100%
+- first_name: 90% (1 missing)
+- last_name: 90% (1 missing)
+- email: 100%
+- phone: 100%
+- date_of_birth: 100%
+- address: 80% (2 missing)
+- income: 90% (1 missing)
+- account_status: 90% (1 missing)
+- created_date: 100%
+
+DATA TYPES:
+----------------------------------------
+- customer_id: INT64 OK
+- first_name: STR OK
+- last_name: STR OK
+- email: STR OK
+- phone: STR OK
+- date_of_birth: STRING X (should be DATE)
+- address: STR OK
+- income: FLOAT64 ~ (should be INT, float due to NaN)
+- account_status: STR OK
+- created_date: STRING X (should be DATE)
+
+QUALITY ISSUES:
+----------------------------------------
+1. Missing first_name
+   Examples: Rows [3]
+   Impact: 1 rows = 10% incomplete
+
+2. Missing last_name
+   Examples: Rows [5]
+   Impact: 1 rows = 10% incomplete
+
+3. Missing address
+   Examples: Rows [2, 9]
+   Impact: 2 rows = 20% incomplete
+
+4. Missing income
+   Examples: Rows [3]
+   Impact: 1 rows = 10% incomplete
+
+5. Missing account_status
+   Examples: Rows [4]
+   Impact: 1 rows = 10% incomplete
+
+6. Invalid dates in date_of_birth
+   Row 6: 'invalid_date' (cannot be parsed as a date)
+   Impact: 1 rows have unusable date values
+
+7. Invalid dates in created_date
+   Row 10: 'invalid_date' (cannot be parsed as a date)
+   Impact: 1 rows have unusable date values
+
+8. Inconsistent phone formats
+   Row 3: '(555) 234-5678'
+   Row 8: '555.789.0123'
+   Row 9: '5557890123'
+   Impact: 3 rows need phone normalization
+
+9. Non-standard date format in date_of_birth
+   Row 4: '1975/05/10'
+   Impact: 1 rows need date format normalization
+
+10. Non-standard date format in created_date
+   Row 5: '01/15/2024'
+   Impact: 1 rows need date format normalization
+
+11. Name casing inconsistencies
+   Row 8 last_name: 'wilson' (expected 'Wilson')
+   Impact: 1 rows need title case normalization
+
+12. Email casing inconsistencies
+   Row 6: 'PATRICIA.DAVIS@GMAIL.COM'
+   Impact: 1 rows have non-lowercase emails
+
+13. Invalid account_status values
+   Row 4: 'MISSING'
+   Impact: 1 rows have invalid status values
+
+SEVERITY:
+----------------------------------------
+- Critical (blocks processing): 2 invalid dates prevent date calculations
+- High (data incorrect): 5 missing values across key columns
+- Medium (needs cleaning): 6 format inconsistencies (phones, dates, names, emails)

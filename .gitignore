@@ -16,3 +16,6 @@ Thumbs.db
 
 # ydata-profiling output
 *.html
+
+# Lab instructions (private)
+task.md

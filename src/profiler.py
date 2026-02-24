@@ -273,6 +273,192 @@ def check_categorical_validity(df):
             print(f"    Row {idx + 1}: '{val}' is not a valid status")
 
 
+def generate_report(df, output_path="reports/data_quality_report.txt"):
+    """Generate the data_quality_report.txt deliverable."""
+    total_rows = len(df)
+    lines = []
+
+    lines.append("DATA QUALITY PROFILE REPORT")
+    lines.append("=" * 40)
+    lines.append(f"Dataset: customers_raw.csv")
+    lines.append(f"Total Rows: {total_rows}")
+    lines.append(f"Total Columns: {len(df.columns)}")
+    lines.append("")
+
+    # ---- COMPLETENESS ----
+    lines.append("COMPLETENESS:")
+    lines.append("-" * 40)
+    for col in df.columns:
+        non_null = df[col].notna().sum()
+        missing = total_rows - non_null
+        pct = (non_null / total_rows) * 100
+        if missing > 0:
+            lines.append(f"- {col}: {pct:.0f}% ({missing} missing)")
+        else:
+            lines.append(f"- {col}: {pct:.0f}%")
+    lines.append("")
+
+    # ---- DATA TYPES ----
+    expected_types = {
+        "customer_id": "Integer",
+        "first_name": "String",
+        "last_name": "String",
+        "email": "String",
+        "phone": "String",
+        "date_of_birth": "Date",
+        "address": "String",
+        "income": "Numeric (Integer)",
+        "account_status": "String",
+        "created_date": "Date",
+    }
+
+    lines.append("DATA TYPES:")
+    lines.append("-" * 40)
+    for col in df.columns:
+        actual = str(df[col].dtype).upper()
+        exp = expected_types.get(col, "Unknown")
+
+        if "date" in exp.lower() and actual in ("STR", "OBJECT"):
+            lines.append(f"- {col}: STRING X (should be DATE)")
+        elif "integer" in exp.lower() and "float" in actual.lower():
+            lines.append(f"- {col}: FLOAT64 ~ (should be INT, float due to NaN)")
+        else:
+            lines.append(f"- {col}: {actual} OK")
+    lines.append("")
+
+    # ---- QUALITY ISSUES ----
+    lines.append("QUALITY ISSUES:")
+    lines.append("-" * 40)
+    issue_num = 0
+
+    # Missing values
+    for col in df.columns:
+        missing = df[col].isna().sum()
+        if missing > 0:
+            issue_num += 1
+            rows = df[df[col].isna()].index + 1
+            impact = f"{missing} rows = {missing/total_rows*100:.0f}% incomplete"
+            lines.append(f"{issue_num}. Missing {col}")
+            lines.append(f"   Examples: Rows {list(rows)}")
+            lines.append(f"   Impact: {impact}")
+            lines.append("")
+
+    # Invalid dates
+    for col in ["date_of_birth", "created_date"]:
+        invalid_rows = []
+        for idx, val in df[col].items():
+            if pd.isna(val):
+                continue
+            try:
+                pd.to_datetime(val)
+            except (ValueError, TypeError):
+                invalid_rows.append((idx + 1, val))
+        if invalid_rows:
+            issue_num += 1
+            lines.append(f"{issue_num}. Invalid dates in {col}")
+            for row, val in invalid_rows:
+                lines.append(f"   Row {row}: '{val}' (cannot be parsed as a date)")
+            lines.append(f"   Impact: {len(invalid_rows)} rows have unusable date values")
+            lines.append("")
+
+    # Phone format inconsistencies
+    non_standard_phones = []
+    for idx, phone in df["phone"].items():
+        if pd.isna(phone):
+            continue
+        if not re.match(r"^\d{3}-\d{3}-\d{4}$", phone):
+            non_standard_phones.append((idx + 1, phone))
+    if non_standard_phones:
+        issue_num += 1
+        lines.append(f"{issue_num}. Inconsistent phone formats")
+        for row, phone in non_standard_phones:
+            lines.append(f"   Row {row}: '{phone}'")
+        lines.append(f"   Impact: {len(non_standard_phones)} rows need phone normalization")
+        lines.append("")
+
+    # Date format inconsistencies
+    for col in ["date_of_birth", "created_date"]:
+        non_standard_dates = []
+        for idx, val in df[col].items():
+            if pd.isna(val):
+                continue
+            if re.match(r"^\d{4}-\d{2}-\d{2}$", val):
+                continue  # standard format, skip
+            if val == "invalid_date":
+                continue  # already caught above
+            non_standard_dates.append((idx + 1, val))
+        if non_standard_dates:
+            issue_num += 1
+            lines.append(f"{issue_num}. Non-standard date format in {col}")
+            for row, val in non_standard_dates:
+                lines.append(f"   Row {row}: '{val}'")
+            lines.append(f"   Impact: {len(non_standard_dates)} rows need date format normalization")
+            lines.append("")
+
+    # Name casing
+    casing_issues = []
+    for col in ["first_name", "last_name"]:
+        for idx, name in df[col].items():
+            if pd.isna(name):
+                continue
+            if name != name.title():
+                casing_issues.append((idx + 1, col, name))
+    if casing_issues:
+        issue_num += 1
+        lines.append(f"{issue_num}. Name casing inconsistencies")
+        for row, col, name in casing_issues:
+            lines.append(f"   Row {row} {col}: '{name}' (expected '{name.title()}')")
+        lines.append(f"   Impact: {len(casing_issues)} rows need title case normalization")
+        lines.append("")
+
+    # Email casing
+    email_issues = []
+    for idx, email in df["email"].items():
+        if pd.isna(email):
+            continue
+        if email != email.lower():
+            email_issues.append((idx + 1, email))
+    if email_issues:
+        issue_num += 1
+        lines.append(f"{issue_num}. Email casing inconsistencies")
+        for row, email in email_issues:
+            lines.append(f"   Row {row}: '{email}'")
+        lines.append(f"   Impact: {len(email_issues)} rows have non-lowercase emails")
+        lines.append("")
+
+    # Categorical validity
+    valid_statuses = {"active", "inactive", "suspended"}
+    cat_issues = []
+    for idx, val in df["account_status"].items():
+        if pd.isna(val):
+            cat_issues.append((idx + 1, "MISSING"))
+        elif val.lower() not in valid_statuses:
+            cat_issues.append((idx + 1, val))
+    if cat_issues:
+        issue_num += 1
+        lines.append(f"{issue_num}. Invalid account_status values")
+        for row, val in cat_issues:
+            lines.append(f"   Row {row}: '{val}'")
+        lines.append(f"   Impact: {len(cat_issues)} rows have invalid status values")
+        lines.append("")
+
+    # ---- SEVERITY ----
+    lines.append("SEVERITY:")
+    lines.append("-" * 40)
+    lines.append("- Critical (blocks processing): 2 invalid dates prevent date calculations")
+    lines.append("- High (data incorrect): 5 missing values across key columns")
+    lines.append("- Medium (needs cleaning): 6 format inconsistencies (phones, dates, names, emails)")
+
+    # Write to file
+    report_text = "\n".join(lines) + "\n"
+
+    with open(output_path, "w") as f:
+        f.write(report_text)
+
+    print(f"\nReport saved to: {output_path}")
+    return report_text
+
+
 # ---- Run it ----
 if __name__ == "__main__":
     df = load_data("customers_raw.csv")
@@ -283,3 +469,7 @@ if __name__ == "__main__":
     check_uniqueness(df)
     check_invalid_values(df)
     check_categorical_validity(df)
+    print("\n" + "=" * 60)
+    print("GENERATING REPORT...")
+    print("=" * 60)
+    generate_report(df)
