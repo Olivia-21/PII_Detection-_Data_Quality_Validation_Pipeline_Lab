@@ -1,0 +1,38 @@
+VALIDATION RESULTS
+==================
+
+PASS: 2 rows passed all checks
+FAIL: 8 rows failed
+
+FAILURES BY COLUMN:
+-------------------
+first_name:
+- Row 3: Empty (should be non-empty)
+
+last_name:
+- Row 5: Empty (should be non-empty)
+- Row 8: 'wilson' (should be title case after cleaning)
+
+phone:
+- Row 3: '(555) 234-5678' (no formatting)
+- Row 8: '555.789.0123' (non-standard format, should be XXX-XXX-XXXX)
+- Row 9: '5557890123' (no formatting)
+
+date_of_birth:
+- Row 4: '1975/05/10' (wrong format, should be YYYY-MM-DD)
+- Row 6: 'invalid_date' (invalid date value)
+
+address:
+- Row 2: Empty (should be non-empty)
+- Row 9: Empty (should be non-empty)
+
+income:
+- Row 3: Empty (should be non-empty)
+
+account_status:
+- Row 4: Empty (should be one of: active, inactive, suspended)
+
+created_date:
+- Row 5: '01/15/2024' (wrong format, should be YYYY-MM-DD)
+- Row 10: 'invalid_date' (invalid date value)
+
