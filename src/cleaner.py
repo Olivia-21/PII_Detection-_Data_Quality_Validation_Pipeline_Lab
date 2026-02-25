@@ -58,33 +58,53 @@ def run_cleaner():
     
     name_changes = name_changed_mask.sum()
     
+    # Normalized emails
+    if 'email' in df.columns:
+        original_emails = df['email'].copy()
+        mask = df['email'].notna()
+        df.loc[mask, 'email'] = df.loc[mask, 'email'].astype(str).str.lower()
+        email_changes = (original_emails[mask] != df.loc[mask, 'email']).sum()
+    else:
+        email_changes = 0
+    
     # Missing values
     missing_actions = []
+    df['needs_review'] = False
     
-    fn_missing = df['first_name'].isna().sum()
+    mask_fn = df['first_name'].isna()
+    fn_missing = mask_fn.sum()
     if fn_missing > 0:
-        df.loc[df['first_name'].isna(), 'first_name'] = 'Unknown'
+        df.loc[mask_fn, 'first_name'] = 'Unknown'
+        df.loc[mask_fn, 'needs_review'] = True
         missing_actions.append(f"- first_name: {fn_missing} row missing -> filled with 'Unknown'")
         
-    ln_missing = df['last_name'].isna().sum()
+    mask_ln = df['last_name'].isna()
+    ln_missing = mask_ln.sum()
     if ln_missing > 0:
-        df.loc[df['last_name'].isna(), 'last_name'] = 'Unknown'
+        df.loc[mask_ln, 'last_name'] = 'Unknown'
+        df.loc[mask_ln, 'needs_review'] = True
         missing_actions.append(f"- last_name: {ln_missing} row missing -> filled with 'Unknown'")
         
-    addr_missing = df['address'].isna().sum()
+    mask_addr = df['address'].isna()
+    addr_missing = mask_addr.sum()
     if addr_missing > 0:
-        df.loc[df['address'].isna(), 'address'] = 'Unknown Address'
+        df.loc[mask_addr, 'address'] = 'Unknown Address'
+        df.loc[mask_addr, 'needs_review'] = True
         missing_actions.append(f"- address: {addr_missing} row missing -> filled with 'Unknown Address'")
         
-    inc_missing = df['income'].isna().sum()
+    mask_inc = df['income'].isna()
+    inc_missing = mask_inc.sum()
     if inc_missing > 0:
-        df.loc[df['income'].isna(), 'income'] = 0.0
+        df.loc[mask_inc, 'income'] = 0.0
+        df.loc[mask_inc, 'needs_review'] = True
         missing_actions.append(f"- income: {inc_missing} row missing -> filled with 0")
         
-    status_missing = df['account_status'].isna().sum()
+    mask_status = df['account_status'].isna()
+    status_missing = mask_status.sum()
     if status_missing > 0:
         # filling with inactive to pass validation securely
-        df.loc[df['account_status'].isna(), 'account_status'] = 'inactive'
+        df.loc[mask_status, 'account_status'] = 'inactive'
+        df.loc[mask_status, 'needs_review'] = True
         missing_actions.append(f"- account_status: {status_missing} row missing -> filled with 'inactive'")
         
     # Run validation before cleaning
@@ -118,6 +138,7 @@ Normalization:
 - Phone format: Converted -> XXX-XXX-XXXX ({phone_changes} rows affected)
 - Date format: Converted -> YYYY-MM-DD ({date_changes} rows affected)
 - Name case: Applied title case ({name_changes} rows affected)
+- Email case: Applied lowercase ({email_changes} rows affected)
 
 Missing Values:
 """

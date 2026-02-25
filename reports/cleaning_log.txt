@@ -7,6 +7,7 @@ Normalization:
 - Phone format: Converted -> XXX-XXX-XXXX (3 rows affected)
 - Date format: Converted -> YYYY-MM-DD (4 rows affected)
 - Name case: Applied title case (1 rows affected)
+- Email case: Applied lowercase (1 rows affected)
 
 Missing Values:
 - first_name: 1 row missing -> filled with 'Unknown'
@@ -20,4 +21,4 @@ Validation After Cleaning:
 - After: 0 rows failed
 - Status: PASS
 
-Output: output/customers_cleaned.csv (10 rows, 10 columns)
+Output: output/customers_cleaned.csv (10 rows, 11 columns)

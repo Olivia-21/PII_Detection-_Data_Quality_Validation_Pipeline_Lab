@@ -1,0 +1,48 @@
+PIPELINE EXECUTION REPORT
+=========================
+Timestamp: 2026-02-25 08:15:38
+
+Stage 1: LOAD
+✓ Loaded customers_raw.csv
+- 10 rows, 10 columns
+
+Stage 2: CLEAN
+✓ Normalized phone formats
+✓ Normalized date formats
+✓ Fixed capitalization
+✓ Filled missing values
+
+Stage 3: VALIDATE
+✓ Passed schema validation
+- 10/10 rows passed
+
+Stage 4: DETECT PII
+✓ Found PII across expected columns:
+- email addresses
+- phone numbers
+- addresses
+- dates of birth
+
+Stage 5: MASK
+✓ Masked all PII
+- Names: masked
+- Emails: masked
+- Phones: masked
+- Addresses: masked
+- DOBs: masked
+
+Stage 6: SAVE
+✓ Saved outputs:
+- customers_masked.csv (masked data)
+- data_quality_report.txt
+- validation_results.txt
+- pii_detection_report.txt
+- cleaning_log.txt
+- masked_sample.txt
+
+SUMMARY:
+- Input: 10 rows (messy)
+- Output: 10 rows (clean, masked, validated)
+- Quality: PASS
+- PII Risk: MITIGATED (all masked)
+Status: SUCCESS ✓
