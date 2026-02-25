@@ -3,10 +3,10 @@ import pandera.pandas as pa
 from collections import defaultdict
 import os
 
-def run_validation():
+def run_validation(input_file="customers_raw.csv", output_file="reports/validation_results.txt"):
     # Read CSV
     # Using keep_default_na=True keeps NaNs.
-    df = pd.read_csv("customers_raw.csv")
+    df = pd.read_csv(input_file)
 
     schema = pa.DataFrameSchema({
         "customer_id": pa.Column(pa.Int, checks=pa.Check(lambda s: s > 0, error="must be positive"), unique=True, nullable=False),
@@ -73,8 +73,8 @@ def run_validation():
     failed_count = len(failed_rows)
     passed_count = total_rows - failed_count
 
-    os.makedirs('reports', exist_ok=True)
-    with open('reports/validation_results.txt', 'w') as f:
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+    with open(output_file, 'w') as f:
         f.write("VALIDATION RESULTS\n")
         f.write("==================\n\n")
         f.write(f"PASS: {passed_count} rows passed all checks\n")

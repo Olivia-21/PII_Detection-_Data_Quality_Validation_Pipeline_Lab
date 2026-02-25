@@ -1,0 +1,8 @@
+VALIDATION RESULTS
+==================
+
+PASS: 10 rows passed all checks
+FAIL: 0 rows failed
+
+FAILURES BY COLUMN:
+-------------------
